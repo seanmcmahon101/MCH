@@ -13,6 +13,8 @@ import pandas as pd
 import numpy as np
 import time
 
+import multiprocessing
+
 # Define the download directory
 downloads_dir = os.path.join(os.getcwd(), "downloads")
 print(f"Downloads directory: {downloads_dir}")
@@ -162,8 +164,6 @@ def codedatescraper():
 
         print("Navigated to URL successfully")
 
-        # Skipping date input since it's commented out in the provided code
-
         print("Viewing report")
         dropdown_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#ReportViewerControl_ctl05_ctl04_ctl00_ButtonImg")))
         driver.execute_script("arguments[0].scrollIntoView(true);", dropdown_button)
@@ -228,36 +228,22 @@ def file_analysis(codate_df, itemlist_df):
     else:
         print("'CustID' column is missing in the codate DataFrame.")
         df_codate_cleaned = df_codate
-    
-    # Drop rows with missing 'Quantity' in the itemlist DataFrame
+    # drop rows with missing 'Quantity' in the itemlist DataFrame
     df_itemlist_cleaned = df_itemlist.dropna(subset=['Quantity'])
-    
-    # Add minutes of job for each cell in the itemlist_df (assuming 10 minutes per job as an example)
     df_itemlist_cleaned['MinutesOfJob'] = df_itemlist_cleaned['Quantity'] * 10  # Adjust the multiplier as needed
     df_codate_cleaned['MinutesOfJob'] = df_codate_cleaned['WCRMins'] * 10  # Adjust the multiplier as needed
-
-    # Add 'Alert' column based on the minutes of job
-    #df_itemlist_cleaned['Alert'] = df_itemlist_cleaned['MinutesOfJob'].apply(lambda x: 'Alert' if x > 4000 else '')
-    #df_codate_cleaned['Alert'] = df_codate_cleaned['MinutesOfJob'].apply(lambda x: 'Alert' if x > 4000 else '')
-
-    
-
-    # Calculate total quantity for each buyer
     total_quantity_per_buyer = df_itemlist_cleaned.groupby('Buyer')['Quantity'].sum().reset_index()
     total_quantity_per_part = df_itemlist_cleaned.groupby('Parent')['Quantity'].sum().reset_index()
-
-    # Quantities for codate
     total_quantity_per_buyer_codate = df_codate_cleaned.groupby('Buyer')['WCRMins'].sum().reset_index()
     total_quantity_per_part_codate = df_codate_cleaned.groupby('Item Number')['WCRMins'].sum().reset_index()
-
-    #Adding Alert to the total quantity per buyer and total quantity per part
     total_quantity_per_buyer['Alert'] = total_quantity_per_buyer['Quantity'].apply(lambda x: 'Alert' if x > 4000 else '')
     total_quantity_per_part['Alert'] = total_quantity_per_part['Quantity'].apply(lambda x: 'Alert' if x > 4000 else '')
-
-    #Adding Alert to the total quantity per buyer and total quantity per part for codate
     total_quantity_per_buyer_codate['Alert'] = total_quantity_per_buyer_codate['WCRMins'].apply(lambda x: 'Alert' if x > 4000 else '')
     total_quantity_per_part_codate['Alert'] = total_quantity_per_part_codate['WCRMins'].apply(lambda x: 'Alert' if x > 4000 else '')
-
+    total_quantity_per_buyer = total_quantity_per_buyer.sort_values(by = 'Quantity', ascending=False)
+    total_quantity_per_part = total_quantity_per_part.sort_values(by = 'Quantity', ascending=False)
+    total_quantity_per_buyer_codate = total_quantity_per_buyer_codate.sort_values(by = 'WCRMins', ascending=False)
+    total_quantity_per_part_codate = total_quantity_per_part_codate.sort_values(by = 'WCRMins', ascending=False)
     # Print data processing results for verification
     print("Code date DataFrame after cleaning:")
     print(df_codate_cleaned)
@@ -269,22 +255,21 @@ def file_analysis(codate_df, itemlist_df):
     print(total_quantity_per_buyer_codate)
     print(total_quantity_per_part_codate)
 
-    # Export to Excel sheet, into separate sheets in the same workbook
+    # export to Excel sheet
     with pd.ExcelWriter('Item Breakdown.xlsx') as writer:
         total_quantity_per_buyer.to_excel(writer, sheet_name='Total Quantity per Buyer', index=False)
         total_quantity_per_part.to_excel(writer, sheet_name='Total Quantity per Part', index=False)
         total_quantity_per_buyer_codate.to_excel(writer, sheet_name='Total Quantity per Buyer CoDate', index=False)
         total_quantity_per_part_codate.to_excel(writer, sheet_name='Total Quantity per Part CoDate', index=False)
-        #df_itemlist_cleaned.to_excel(writer, sheet_name='Item List with Alerts', index=False)
-        #df_codate_cleaned.to_excel(writer, sheet_name='Codate with Alerts', index=False)
 
     os.startfile('Item Breakdown.xlsx')
     
     return total_quantity_per_buyer, total_quantity_per_part, total_quantity_per_buyer_codate, total_quantity_per_part_codate
 
+#-------------------------multiprocessing below (2 cores), confusing as shit----------------------------------#
 
 if __name__ == "__main__":
-    #Retry logic for codedatescraper
+    #retry logic for when it inevitably fails
     attempts = 3
     for attempt in range(attempts):
         codate_df = codedatescraper()
@@ -294,11 +279,11 @@ if __name__ == "__main__":
             break
         else:
             print(f"Attempt {attempt + 1} for CoDate scraper failed.")
-        time.sleep(5)  # Optional: wait a bit before retrying
+        time.sleep(5)  
     #else:
         print("Failed to load CoDate DataFrame after 3 attempts.")
 
-    #Retry logic for itemlistscraper
+    #retry logic for when it inevitably fails... again
     for attempt in range(attempts):
         itemlist_df = itemlistscraper()
         if itemlist_df is not None:
@@ -307,7 +292,7 @@ if __name__ == "__main__":
             break
         else:
             print(f"Attempt {attempt + 1} for ItemList scraper failed.")
-        time.sleep(5)  # Optional: wait a bit before retrying
+        time.sleep(5)  
     else:
         print("Failed to load ItemList DataFrame after 3 attempts. Find Sean and harass him")
         
