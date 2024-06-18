@@ -1,4 +1,4 @@
-# Project: Data Scraper and Analysis Tool
+# Project: Run Rates Tool
 
 ## Overview/How-To-Use
 
