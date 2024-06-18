@@ -1,16 +1,13 @@
 # Project: Data Scraper and Analysis Tool
 
-## Overview
-This project is a comprehensive Python-based tool designed for scraping data from web reports, processing and analyzing the data, and providing a graphical user interface (GUI) for user interaction. It consists of several key components:
+## Overview/How-To-Use
 
-1. **Logging Configuration**: Logs important actions and errors.
-2. **Directory Management**: Manages a downloads directory, ensuring it's clean before each new run.
-3. **Cell Run Rates Data**: Initializes and processes cell run rates.
-4. **Web Scrapers**: Contains functions for scraping data from specific URLs.
-5. **Data Analysis**: Analyzes the scraped data and generates reports.
-6. **GUI**: Provides a Tkinter-based GUI for user interaction and data input.
+1. **Running the Program**: Double Click to .exe file
+2. **Using the Interface**: You can either manually edit the cell run rates or paste the run rates from the live sheet into the box at the bottom.
+3. **Run**: First - Press update the cell rate then press svae, the program will then run in the background
+4. **Completion**: When the program is done an excel sheet with the output will be created.
 
-## Components
+## TECHNICAL STUFF ---------------
 
 ### Logging Configuration
 Configures logging to record events and errors in `app.log` and stream them to the console.
@@ -54,3 +51,4 @@ Provides a Tkinter-based GUI for user interaction:
 1. Install the required libraries:
    ```bash
    pip install pandas plyer selenium tk office365-connector requests_ntlm xlsxwriter
+   ```
