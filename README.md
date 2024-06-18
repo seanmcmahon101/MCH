@@ -7,7 +7,7 @@
 3. **Run**: First - Press update the cell rate then press svae, the program will then run in the background
 4. **Completion**: When the program is done an excel sheet with the output will be created.
 
-## TECHNICAL STUFF ---------------
+## TECHNICAL STUFF 
 
 ### Logging Configuration
 Configures logging to record events and errors in `app.log` and stream them to the console.
